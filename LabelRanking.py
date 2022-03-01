@@ -1,4 +1,4 @@
-import graph2matrix as g2m
+import graph2Matrix as g2m
 import numpy as np
 import random
 import heapq

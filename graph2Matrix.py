@@ -43,3 +43,5 @@ def graph2matrix(G, weighted=False):
             laplacianMatrix[i][i] = G.degrees(nodes[i])
             
     return adjMatrix, laplacianMatrix
+
+#Updated 

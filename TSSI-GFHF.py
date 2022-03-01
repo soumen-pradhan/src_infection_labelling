@@ -69,3 +69,5 @@ def GFHF(G, IG, initIdx, alpha):
             maxp = p[i]
             detectedSource = nodes[i]
     return detectedSource
+
+#Updated

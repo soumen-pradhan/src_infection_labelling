@@ -67,3 +67,5 @@ def LLGC(G, IG, initIdx, alpha):
             detectedSource = nodes[i]
 
     return detectedSource
+
+#Updated

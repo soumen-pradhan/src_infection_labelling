@@ -201,10 +201,13 @@ def sensor_node_selection(g1):
             # print("sen", sen)
     return sensor_nodes1
 
+# def GMLA(G, )
 
 ####################################################################################
 
 # numpy.random.seed(52)  # option for reproducibility---- 51,52,53,54,55,57,58,59
+
+
 def main():
     total_distance = 0
     repeat = 5

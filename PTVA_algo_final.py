@@ -219,6 +219,7 @@ def sensor_node_selection(g1):
     return sensor_nodes1
 
 
+
 # Main Part -----------------------------------------------------------------
 def main():
     repeat = 50

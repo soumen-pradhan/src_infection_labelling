@@ -12,6 +12,8 @@ import time
 import numpy as np
 import json
 # from numba import jit
+# import plotting
+
 
 def observed_delay(g, O):
     d = numpy.zeros(shape=(len(O) - 1, 1))
@@ -38,7 +40,8 @@ def delay_covariance(T, O, sigma2):
     for k in range(n - 1):
         for i in range(n - 1):
             if i == k:
-                delta[k][i] = len(list(nx.all_simple_paths(T, O[0], O[k + 1]))[0]) - 1
+                delta[k][i] = len(
+                    list(nx.all_simple_paths(T, O[0], O[k + 1]))[0]) - 1
             else:
                 # print("k", k, "i", i)
                 c1 = list(nx.all_simple_paths(T, O[0], O[k + 1]))[0]
@@ -90,7 +93,7 @@ def run(g, O, mi, sigma2, O_length, d):
 
     # Compute the delay vector d relative to first_node
 
-    # print("observed dalay completed")
+    print("observed dalay completed")
     # Score list of pair (node , score)
     s = {}
     # s=[(O[0],0)]
@@ -149,9 +152,9 @@ def run(g, O, mi, sigma2, O_length, d):
 
     sorted_score = sorted(s.items(), key=lambda kv: kv[1], reverse=True)
 
-    # print("The rumour source in order : ")
+    print("The rumour source in order : ")
     for a in range(1):
-        # print(sorted_score[a][0], "\t")
+        print(sorted_score[a][0], "\t")
         infected_node1 = sorted_score[a][0]
     return s, infected_node1
 
@@ -198,23 +201,26 @@ def sensor_node_selection(g1):
             # print("sen", sen)
     return sensor_nodes1
 
+# def GMLA(G, )
 
 ####################################################################################
 
-def GMLA(G, filename, iterations):
-    # numpy.random.seed(52)  # option for reproducibility---- 51,52,53,54,55,57,58,59
-    g = G
+# numpy.random.seed(52)  # option for reproducibility---- 51,52,53,54,55,57,58,59
+
+
+def main():
     total_distance = 0
-    repeat = iterations
+    repeat = 5
     repeat_list = []
-    error_distance =[]
+    error_distance = []
     time_list = []
     total_time = 0
-    #result = [(error_distance, time)]
-    result = [] 
+    # filename = "soc-karate"
     # df = pd.read_csv(filename + '.csv', delimiter=',')
     # df = df[["Source", "Target"]]
     # g = from_pandas_dataframe(df, source='Source', target='Target')
+    filename = 'karate'
+    g = nx.karate_club_graph()
 
     node_len = len(g.nodes)
     min_node = min(g.nodes)
@@ -251,8 +257,8 @@ def GMLA(G, filename, iterations):
         # run(g, O, mi, sigma2,k0)
         d = observed_delay(g, O)
         score, infected_nodes = run(g, O, mi, sigma2, O_length, d)
+        print(f'score: {score}')
         end = time.time()
-        curr_time = (end-start)
         total_time = total_time + (end - start)
         time_list.append(total_time)
         min_time = min(t)
@@ -265,16 +271,11 @@ def GMLA(G, filename, iterations):
         distance = infected_nodes_and_shortest_path.get(infected_node)
         # print("distance error\t", distance, "\n")
         error_distance.append(distance)
-        result.append((distance, curr_time))
         total_distance = total_distance + distance
 
         repeat_list.append(rep)
-
-        print(f'GMLA {O[0]} -> {len(list(G.neighbors(O[0])))}')
-
         # print("avg error distance is: ", total_distance/len(repeat_list))
         # print("############################################## repeating ", rep, "time")
-    return result
     print("error_distance", error_distance)
     print(repeat_list)
     error_distance_dict = dict(zip(repeat_list, error_distance))
@@ -337,7 +338,11 @@ def GMLA(G, filename, iterations):
             fives.append(i)
         if i == 6:
             sixes.append(i)
-    print("0's:", len(zeros), ", 1's:", len(ones), ", 2's:", len(twos), ", 3's:", len(threes), ", 4's:", len(fours), ",5's:", len(fives), ", 6's:", len(sixes))
-    print("Runtime of the program is", {end - start})
-    # plt.show()
-    
+    print("0's:", len(zeros), ", 1's:", len(ones), ", 2's:", len(twos), ", 3's:", len(
+        threes), ", 4's:", len(fours), ",5's:", len(fives), ", 6's:", len(sixes))
+    # print("Runtime of the program is", {end - start})
+    plt.show()
+
+
+if __name__ == '__main__':
+    main()

@@ -21,9 +21,11 @@ import time
 
 
 def load(filename):
-    df = pd.read_csv(filename + '.csv')
+    df = pd.read_csv(filename + ".csv")
     Graphtype = nx.Graph()
-    G = nx.from_pandas_edgelist(df, source='Source', target='Target', create_using=Graphtype)
+    G = nx.from_pandas_edgelist(
+        df, source="Source", target="Target", create_using=Graphtype
+    )
     # nx.draw(G, with_labels=True)
     # # G = nx.karate_club_graph()
     # plt.clf()
@@ -48,8 +50,8 @@ def infect_graph(g, filename):
     nos = 1 / len(G)
     # Model Configuration
     config = mc.Configuration()
-    config.add_model_parameter('beta', 0.03)
-    config.add_model_parameter("fraction_infected", 1/len(G))
+    config.add_model_parameter("beta", 0.03)
+    config.add_model_parameter("fraction_infected", 1 / len(G))
     model.set_initial_status(config)
 
     # Simulation execution
@@ -60,18 +62,18 @@ def infect_graph(g, filename):
         diffusionTime[i] = -1
 
     for i in iterations:
-        for j in i['status']:
-            if i['status'][j] == 1:
-                diffusionTime[j] = i['iteration']
+        for j in i["status"]:
+            if i["status"][j] == 1:
+                diffusionTime[j] = i["iteration"]
 
     nodeColor = []
     source_nodes = []
     for i in G.nodes():
         if iterations[0]["status"][i] == 1:
-            nodeColor.append('red')
+            # nodeColor.append('red')
             source_nodes.append(i)
-        else:
-            nodeColor.append('blue')
+        # else:
+        #     nodeColor.append('blue')
     # print("source nodes", source_nodes)
     sorted_values = sorted(diffusionTime.values())  # Sort the values
     # print(sorted_values)
@@ -94,9 +96,35 @@ def infect_graph(g, filename):
     return G, sorted_dict, source_nodes
 
 
-_legends = [Line2D([0], [0], marker='o', color='w', label='Source', markerfacecolor='r', markersize=15),
-            Line2D([0], [0], marker='o', color='w', label='Observers', markerfacecolor='g', markersize=15),
-            Line2D([0], [0], marker='o', color='w', label='Others', markerfacecolor='b', markersize=15), ]
+_legends = [
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="w",
+        label="Source",
+        markerfacecolor="r",
+        markersize=15,
+    ),
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="w",
+        label="Observers",
+        markerfacecolor="g",
+        markersize=15,
+    ),
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="w",
+        label="Others",
+        markerfacecolor="b",
+        markersize=15,
+    ),
+]
 
 node_color = []
 
@@ -104,17 +132,17 @@ node_color = []
 def coloring(filename, G, nodes, score_list, O, algo, sourceNodes):
     for i in nodes:
         if i in score_list:
-            node_color.append('red')
+            node_color.append("red")
         elif i in sourceNodes:
-            node_color.append('yellow')
+            node_color.append("yellow")
         elif i in O:
-            node_color.append('green')
+            node_color.append("green")
         else:
-            node_color.append('blue')
+            node_color.append("blue")
 
     # plt.clf()
     # nx.draw(G, with_labels=True, node_size=300, node_color=node_color)
-    # plt.legend(_legends, ['Source', 'Observers', 'Others'], loc="upper right")
+    # plt.legend(_legends, ["Source", "Observers", "Others"], loc="upper right")
     # plt.savefig(filename + "_algo_ptva.png")
 
 
@@ -124,15 +152,16 @@ def delayVector(G, t1, observers):
 
     d = np.zeros(shape=(len(observers) - 1, 1))
     O_length = len(observers)
-    for i in range(O_length-1):
+
+    for i in range(O_length - 1):
         # print(i+1)
         # print("\t\t\t\t", G.nodes[observers[i]]['time'])
-        d[i][0] = G.nodes[observers[i + 1]]['time'] - t1
+        d[i][0] = G.nodes[observers[i + 1]]["time"] - t1
     return d
 
 
 def nEdges(bfs, s, a):
-    """ Returns list of edges from s -> a"""
+    """Returns list of edges from s -> a"""
     try:
         l = list(nx.all_simple_paths(bfs, s, a))[0]
         return l
@@ -180,7 +209,7 @@ def PTVA(G, observers, Ka, sigma2, mn):
     """Main Function for PTVA"""
 
     # selecting t1
-    t1 = G.nodes[observers[0]]['time']
+    t1 = G.nodes[observers[0]]["time"]
     # print("t1", t1)
     # computing d
     d = delayVector(G, t1, observers)
@@ -196,11 +225,11 @@ def PTVA(G, observers, Ka, sigma2, mn):
         likelihood[s] = score
 
     sortedLikelihood = sorted(likelihood.items(), key=lambda x: x[1], reverse=True)
-    # count = 0
-    # for i, x in sortedLikelihood:
-    #     if count < 5:
-    #         print(f'The node {i} has {x[0][0]} likelihood')
-    #     count = count + 1
+    count = 0
+    for i, x in sortedLikelihood:
+        # if count < 5:
+        # print(f"The node {i} has {x[0][0]} likelihood")
+        count = count + 1
     return sortedLikelihood
 
 
@@ -214,36 +243,83 @@ def sensor_node_selection(g1):
     return sensor_nodes1
 
 
-def PTVA_algo(G, filename, iterations):
-    # Main Part -----------------------------------------------------------------
-    repeat = iterations
+def ptva_gen_data(G, rep=10):
+
+    times = []
+    err_dist = []
+    path_nodes = dict(nx.all_pairs_shortest_path_length(G))
+
+    for i in range(rep):
+        G_inf, arrival_time, src_nodes = infect_graph(G, None)
+
+        start = time.time()
+
+        k0 = int(len(G.nodes) / 20)
+        np.random.seed(k0)
+
+        all_obs = np.random.choice(G.nodes, k0, replace=False).tolist()
+        obs = [o for o in all_obs if arrival_time[o] != -1]
+
+        t = [arrival_time[o] for o in obs if arrival_time[o] != -1]
+        mu, sigma2 = np.mean(t), np.var(t)
+
+        for i in range(0, len(obs)):
+            G.nodes[obs[i]]["time"] = t[i]
+
+        score = PTVA(G, obs, k0, sigma2, mu)
+
+        scores = [score[i][0] for i in range(5)]
+        nodes = [list(a)[0] for a in G.nodes(data=True)]
+
+        end = time.time()
+
+        times.append(end - start)
+
+        inf_nodes_paths = []
+
+        for k, v in path_nodes.items():
+            if src_nodes[0] == k:
+                sort = sorted(v.items(), key=lambda z: z[1])
+                inf_nodes_paths.append(dict(sort))
+
+        for i, dict_val in enumerate(inf_nodes_paths):
+            for node, dist in dict_val.items():
+                err_dist.append(dist)
+
+    return np.mean(err_dist), err_dist, np.mean(times)
+
+
+# Main Part -----------------------------------------------------------------
+def main():
+    repeat = 50
     error_distance = []
     total_time = 0
     total_distance = 0
     time_list = []
-    result = []
-    
-    algo = 'ptva'
-    # # G, _ = load(filename)
-    # G = nx.karate_club_graph()
-    _ = len(G)
+    filename = "dolphins"
+    algo = "ptva"
+    # G, _ = load(filename)
+    G = nx.karate_club_graph()
     length_between_nodes = dict(nx.all_pairs_shortest_path_length(G))
     c = 0
     for i in range(repeat):
-        # print("############################### repeating", i,
-        #       "time ###############################")
+        print(
+            "############################### repeating",
+            i,
+            "time ###############################",
+        )
         # Infect graph
         G, arrivalTime, sourceNodes = infect_graph(G, filename=filename)
-        # print(len(G.nodes))
+        print(len(G.nodes))
         # Take observers
         start = time.time()
         # k0 = math.ceil(math.sqrt(len(G)))
         # print("k0", k0)
-        k0 = int(len(G.nodes)/20)
+        k0 = int(len(G.nodes) / 20)
         # k0 = 8
-        # np.random.seed(k0)  <--------------------------------------  seed
+        np.random.seed(k0)
         all_observers = np.random.choice(G.nodes, k0, replace=False).tolist()
-        # print("observers length", len(all_observers))
+        print("observers length", len(all_observers))
         observers = []
         for i in all_observers:
             if arrivalTime[i] != -1:
@@ -251,7 +327,7 @@ def PTVA_algo(G, filename, iterations):
         # print("observers", observers)
         # observers = sensor_node_selection(G)
         O_length = len(observers)
-        # print("o length", O_length)
+        print("o length", O_length)
         # mean and variance
         t = []
 
@@ -268,7 +344,7 @@ def PTVA_algo(G, filename, iterations):
         for i in range(0, O_length):
             # print("i", i)
             # print("t[i]", t[i])
-            G.nodes[observers[i]]['time'] = t[i]
+            G.nodes[observers[i]]["time"] = t[i]
             # print(observers[i], ":", G.nodes[observers[i]])
 
         score = PTVA(G, observers, k0, sigma2, mn)
@@ -276,63 +352,76 @@ def PTVA_algo(G, filename, iterations):
         scoreList = [score[i][0] for i in range(5)]
         nodes = [list(a)[0] for a in G.nodes(data=True)]
 
-        # print()
-        # print(f'Sources : {sourceNodes}')
-        # print(f'Predicted : {scoreList}')
+        print()
+        print(f"Sources : {sourceNodes}")
+        print(f"Predicted : {scoreList}")
         # print(f'accuracy : {accuracy(sourceNodes, scoreList)} %')
 
         end = time.time()
         time_1 = end - start
         time_list.append(time_1)
-        # print("Runtime of the program is", {end - start})
+        print("Runtime of the program is", {end - start})
         # coloring(filename, G, nodes, scoreList, observers, algo, sourceNodes)
         total_time = time_1 + total_time
         infected_nodes_and_shortest_path = []
         for key, value in length_between_nodes.items():
             if sourceNodes[0] == key:
-                infected_nodes_and_shortest_path.append(dict(sorted(value.items(), key=lambda z: z[1])))
+                infected_nodes_and_shortest_path.append(
+                    dict(sorted(value.items(), key=lambda z: z[1]))
+                )
 
         for i, dictionary in enumerate(infected_nodes_and_shortest_path):
             for node, distance in dictionary.items():
                 if scoreList[0] == node:
-                    # print("distance error\t", distance, "\n")
-                    result.append((distance, time_1))
+                    print("distance error\t", distance, "\n")
                     error_distance.append(distance)
                     total_distance = total_distance + distance
-        c = c+ 1
+        c = c + 1
+        print("avg distance error is : ", total_distance / c)
+    avg_time = total_time / repeat
+    avg_distance = total_distance / repeat
+    print("avg_time", avg_time)
+    print("avg_distance", avg_distance)
+    zeros = []
+    ones = []
+    twos = []
+    threes = []
+    fours = []
+    fives = []
+    sixes = []
+    for i in error_distance:
+        if i == 0:
+            zeros.append(i)
+        if i == 1:
+            ones.append(i)
+        if i == 2:
+            twos.append(i)
+        if i == 3:
+            threes.append(i)
+        if i == 4:
+            fours.append(i)
+        if i == 5:
+            fives.append(i)
+        if i == 6:
+            sixes.append(i)
+    print(
+        "0's:",
+        len(zeros),
+        ", 1's:",
+        len(ones),
+        ", 2's:",
+        len(twos),
+        ", 3's:",
+        len(threes),
+        ", 4's:",
+        len(fours),
+        ", 5's:",
+        len(fives),
+        ", 6's:",
+        len(sixes),
+    )
+    # plt.show()
 
-        print(f'PTVA {observers[0]} -> {len(list(G.neighbors(observers[0])))}')
-        # print("avg distance error is : ", total_distance/c)
-    return result
 
-    # avg_time = total_time/repeat
-    # avg_distance = total_distance/repeat
-    # print("avg_time", avg_time)
-    # print("avg_distance", avg_distance)
-    # zeros = []
-    # ones = []
-    # twos = []
-    # threes = []
-    # fours = []
-    # fives = []
-    # sixes = []
-    # for i in error_distance:
-    #     if i == 0:
-    #         zeros.append(i)
-    #     if i == 1:
-    #         ones.append(i)
-    #     if i == 2:
-    #         twos.append(i)
-    #     if i == 3:
-    #         threes.append(i)
-    #     if i == 4:
-    #         fours.append(i)
-    #     if i == 5:
-    #         fives.append(i)
-    #     if i == 6:
-    #         sixes.append(i)
-    # print("0's:", len(zeros), ", 1's:", len(ones), ", 2's:", len(twos), ", 3's:", len(threes), ", 4's:", len(fours), ", 5's:", len(fives), ", 6's:", len(sixes))
-    # # plt.show()
-
-# result = PTVA_algo(nx.karate_club_graph(), "Karate")
-# print(result)
+if __name__ == "__main__":
+    main()

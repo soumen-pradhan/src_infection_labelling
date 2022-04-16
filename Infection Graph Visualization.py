@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[11]:
 
 
 from scipy.sparse import dia_matrix
@@ -26,7 +26,7 @@ np.set_printoptions(threshold=maxsize)
 get_ipython().run_line_magic('load_ext', 'nb_black')
 
 
-# In[2]:
+# In[12]:
 
 
 """ all simulation and label functions return ([label-vector], runtime) """
@@ -57,7 +57,7 @@ def simulateInfection(G, src, model="SI", lamda=0.3, threshold=0.3):
     return y
 
 
-# In[3]:
+# In[13]:
 
 
 def labelRankingScore(G, y, alpha=0.5):
@@ -86,7 +86,7 @@ def labelRankingScore(G, y, alpha=0.5):
     return dict(tup), end - start
 
 
-# In[7]:
+# In[14]:
 
 
 """ known_dicts = [ {infected: [nodes], safe: [nodes]} ] """
@@ -122,7 +122,7 @@ def simulatePartialInfection(
     return known_dicts
 
 
-# In[57]:
+# In[15]:
 
 
 def resetF(F, known_dict, nodes):
@@ -176,6 +176,8 @@ def TSSI_GFHF(G, labelled, src):
     pred_src = max(dict_scores, key=dict_scores.get)
     dist_err = nx_path(G, src, pred_src)
 
+    print(f"TSSI_GFHF {pred_src} -> {len(list(G.neighbors(pred_src)))}")
+
     return dist_err, partial_time + complete_time
 
 
@@ -217,10 +219,12 @@ def TSSI_LGC(G, labelled, src, alpha=0.5):
     pred_src = max(dict_scores, key=dict_scores.get)
     dist_err = nx_path(G, src, pred_src)
 
+    print(f"TSSI_LGC {pred_src} -> {len(list(G.neighbors(pred_src)))}")
+
     return dist_err, partial_time + complete_time
 
 
-# In[68]:
+# In[16]:
 
 
 from urllib.request import urlopen
@@ -245,14 +249,14 @@ with urlopen(d_url) as sock, ZipFile(BytesIO(sock.read())) as zf:
     G_dolphin = nx.parse_gml(gml)
 
 
-# In[105]:
+# In[17]:
 
 
 # Counter -> dict {item: freq}
 from collections import Counter, defaultdict
 
 
-def gen_data(algo, dataset, n_snaps=10):
+def gen_data_partial(algo, dataset, n_snaps=10):
 
     df_dist_err = defaultdict(list)
     df_time = defaultdict(list)
@@ -298,38 +302,99 @@ def gen_data(algo, dataset, n_snaps=10):
     return df_de, df_time, err_freq
 
 
-de, time, err_freq = gen_data(
-    {"GFHF": TSSI_GFHF, "LGC": TSSI_LGC},
-    {
-        "Karate": nx.karate_club_graph(),
-        "Football": G_football,
-        'Facebook': G_facebook,
-        'Dolphin': G_dolphin
-    },
-)
+# In[18]:
 
 
-# In[ ]:
+from GMLA_2 import *
+from PTVA_algo_final import *
 
 
 
+def gen_data_complete(algo, dataset, iterations):
+    df_dist_err = defaultdict(list)
+    df_time = defaultdict(list)
+    err_freq = []
+
+    for G_name, G in dataset.items():
+        N = G.number_of_nodes()
+        score_time = [alg(G, G_name, iterations) for alg in algo.values()]
+        alg_data = [list(zip(*res)) for res in score_time]
+
+        dict_freq = defaultdict(list)
+
+        freq_hops = [Counter(err) for err, _ in alg_data]
+        avg_dist_err = [stats.mean(err) for err, _ in alg_data]
+        avg_time = [stats.mean(time) for _, time in alg_data]
+
+        for alg_name, de, time, freq in zip(
+            algo.keys(), avg_dist_err, avg_time, freq_hops
+        ):
+            df_dist_err[alg_name].append(de)
+            df_time[alg_name].append(time)
+            dict_freq[alg_name] = [freq[i] if i in freq else 0 for i in range(4)]
+
+        df = pd.DataFrame(dict_freq, columns=algo.keys(), index=list(range(4)))
+        err_freq.append(df)
+
+    df_de = pd.DataFrame(df_dist_err, columns=algo.keys(), index=dataset.keys())
+    df_time = pd.DataFrame(df_time, columns=algo.keys(), index=dataset.keys())
+
+    return df_de, df_time, err_freq
 
 
-# In[70]:
+# In[21]:
 
 
-de.plot.bar()
+comp_algo = {"GMLA": GMLA, "PTVA": PTVA_algo}
+par_algo = {"GFHF": TSSI_GFHF, "LGC": TSSI_LGC}
+
+dataset = {
+    "Karate": nx.karate_club_graph(),
+    #     "Football": G_football,
+    #     "Facebook": G_facebook,
+    #     "Dolphin": G_dolphin,
+    #     "Albert": nx.barabasi_albert_graph(n=200, m=5),
+    #     "Erdos": nx.erdos_renyi_graph(n=200, p=0.2),
+}
 
 
-# In[71]:
+# In[22]:
 
 
-time.plot.bar()
+de_comp, time_comp, freq_comp = gen_data_complete(comp_algo, dataset, 10)
 
 
-# In[107]:
+# In[23]:
 
 
-for df in err_freq:
-    df.plot.bar()
+de_par, time_par, err_freq_par = gen_data_partial(par_algo, dataset, 10)
+
+
+# In[24]:
+
+
+de = pd.concat([de_par, de_comp], axis=1)
+de.plot.bar(title="Distance Err")
+
+plt.show()
+
+
+# In[25]:
+
+
+time = pd.concat([time_par, time_comp], axis=1)
+time.plot.bar(title="Time")
+
+plt.show()
+
+
+# In[26]:
+
+
+freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
+
+for f, title in zip(freq, dataset.keys()):
+    f.plot.bar(title=title)
+
+plt.show()
 

@@ -223,8 +223,9 @@ def GMLA(G, filename, iterations):
     length_between_nodes = dict(nx.all_pairs_shortest_path_length(g))
 
     # k0 = math.ceil(math.sqrt(len(g)))
-    k0 = int(len(g.nodes)/20)
+    k0 = max(5, int(len(g.nodes)/20))
     # k0 = 15
+    # np.random.seed(k0)
     for rep in range(1, repeat + 1):
         # ############################################################ Change here
 
@@ -265,79 +266,77 @@ def GMLA(G, filename, iterations):
         distance = infected_nodes_and_shortest_path.get(infected_node)
         # print("distance error\t", distance, "\n")
         error_distance.append(distance)
-        result.append((distance, curr_time))
+        result.append((distance, curr_time, len(list(G.neighbors(infected_node)))))
         total_distance = total_distance + distance
 
         repeat_list.append(rep)
-
-        print(f'GMLA {O[0]} -> {len(list(G.neighbors(O[0])))}')
-
         # print("avg error distance is: ", total_distance/len(repeat_list))
         # print("############################################## repeating ", rep, "time")
+        print(f'GMLA {O[0]} -> {len(list(G.neighbors(O[0])))}')
     return result
-    print("error_distance", error_distance)
-    print(repeat_list)
-    error_distance_dict = dict(zip(repeat_list, error_distance))
-    total_time_dict = dict(zip(repeat_list, time_list))
-    print(error_distance_dict)
-    with open("GMLA_" + filename + "_" + str(O_length) + "_error_distance.json", "w") as a:
-        json.dump(error_distance_dict, a)
+    # print("error_distance", error_distance)
+    # print(repeat_list)
+    # error_distance_dict = dict(zip(repeat_list, error_distance))
+    # total_time_dict = dict(zip(repeat_list, time_list))
+    # print(error_distance_dict)
+    # with open("GMLA_" + filename + "_" + str(O_length) + "_error_distance.json", "w") as a:
+    #     json.dump(error_distance_dict, a)
 
-    with open("GMLA_" + filename + "_" + str(O_length) + "_total_time.json", "w") as outfile:
-        json.dump(total_time_dict, outfile)
+    # with open("GMLA_" + filename + "_" + str(O_length) + "_total_time.json", "w") as outfile:
+    #     json.dump(total_time_dict, outfile)
 
-    print("avg distance error: ", total_distance / repeat)
-    print("avg computation time : ", total_time / repeat)
-    score = sorted(score.items(), key=lambda kv: kv[1], reverse=True)
+    # print("avg distance error: ", total_distance / repeat)
+    # print("avg computation time : ", total_time / repeat)
+    # score = sorted(score.items(), key=lambda kv: kv[1], reverse=True)
 
-    # ################################# Coloring nodes
-    node_color = []
-    count = 0
-    score_list = []
-    count2 = 0
-    for a, b in enumerate(score):
-        # print(a, b)
-        if count2 < 1:
-            score_list.append(b[0])
-            count2 = count2 + 1
+    # # ################################# Coloring nodes
+    # node_color = []
+    # count = 0
+    # score_list = []
+    # count2 = 0
+    # for a, b in enumerate(score):
+    #     # print(a, b)
+    #     if count2 < 1:
+    #         score_list.append(b[0])
+    #         count2 = count2 + 1
 
-    # print("score_list", score_list)
-    for node in g.nodes():
-        # if the node has the attribute group1
-        # elif list(node)[0] in score[:5]:
+    # # print("score_list", score_list)
+    # for node in g.nodes():
+    #     # if the node has the attribute group1
+    #     # elif list(node)[0] in score[:5]:
 
-        if node in score_list:
-            node_color.append('red')
-        elif node in O:
-            node_color.append('green')
-        else:
-            node_color.append('blue')
-    nx.draw(g, node_size=300, node_color=node_color,
-            alpha=1, linewidths=0.5, width=0.5, edge_color='black', with_labels=True)
-    # plt.savefig(filename + "_PTVA.png")
-    zeros = []
-    ones = []
-    twos = []
-    threes = []
-    fours = []
-    fives = []
-    sixes = []
-    for i in error_distance:
-        if i == 0:
-            zeros.append(i)
-        if i == 1:
-            ones.append(i)
-        if i == 2:
-            twos.append(i)
-        if i == 3:
-            threes.append(i)
-        if i == 4:
-            fours.append(i)
-        if i == 5:
-            fives.append(i)
-        if i == 6:
-            sixes.append(i)
-    print("0's:", len(zeros), ", 1's:", len(ones), ", 2's:", len(twos), ", 3's:", len(threes), ", 4's:", len(fours), ",5's:", len(fives), ", 6's:", len(sixes))
-    print("Runtime of the program is", {end - start})
+    #     if node in score_list:
+    #         node_color.append('red')
+    #     elif node in O:
+    #         node_color.append('green')
+    #     else:
+    #         node_color.append('blue')
+    # nx.draw(g, node_size=300, node_color=node_color,
+    #         alpha=1, linewidths=0.5, width=0.5, edge_color='black', with_labels=True)
+    # # plt.savefig(filename + "_PTVA.png")
+    # zeros = []
+    # ones = []
+    # twos = []
+    # threes = []
+    # fours = []
+    # fives = []
+    # sixes = []
+    # for i in error_distance:
+    #     if i == 0:
+    #         zeros.append(i)
+    #     if i == 1:
+    #         ones.append(i)
+    #     if i == 2:
+    #         twos.append(i)
+    #     if i == 3:
+    #         threes.append(i)
+    #     if i == 4:
+    #         fours.append(i)
+    #     if i == 5:
+    #         fives.append(i)
+    #     if i == 6:
+    #         sixes.append(i)
+    # print("0's:", len(zeros), ", 1's:", len(ones), ", 2's:", len(twos), ", 3's:", len(threes), ", 4's:", len(fours), ",5's:", len(fives), ", 6's:", len(sixes))
+    # print("Runtime of the program is", {end - start})
     # plt.show()
     

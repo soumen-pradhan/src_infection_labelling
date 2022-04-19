@@ -6,6 +6,7 @@ import networkx as nx
 from GMLA_2 import *
 from PTVA_algo_final2 import *
 from TSSI_complete import *
+import seaborn as sns
 
 G_football, _ = load("football")
 G_football.nodes()
@@ -74,55 +75,61 @@ def gen_data_partial(algo, dataset, n_snaps=10):
     return df_de, df_time, err_freq
     
 
-#For Algorithms using Complete Observation - GMLA, PTVA
+# For Algorithms using Complete Observation - GMLA, PTVA
 def gen_data_complete(algo, dataset, iterations):
     df_dist_err = defaultdict(list)
     df_time = defaultdict(list)
+    df_candidates = []
     err_freq = []
-
+    
     for G_name, G in dataset.items():
         N = G.number_of_nodes()
-        score_time = [alg(G, G_name, iterations) for alg in algo.values()]
-        alg_data = [list(zip(*res)) for res in score_time]
-
+        score_time_cand = [alg(G, G_name, iterations) for alg in algo.values()]
+        alg_data = [list(zip(*res)) for res in score_time_cand]
         dict_freq = defaultdict(list)
-
-        freq_hops = [Counter(err) for err, _ in alg_data]
-        avg_dist_err = [stats.mean(err) for err, _ in alg_data]
-        avg_time = [stats.mean(time) for _, time in alg_data]
-
-        for alg_name, de, time, freq in zip(
-            algo.keys(), avg_dist_err, avg_time, freq_hops
+        dict_cand = defaultdict(list)
+        
+        freq_hops = [Counter(err) for err, _, _ in alg_data]
+        avg_dist_err = [stats.mean(err) for err, _, _ in alg_data]
+        avg_time = [stats.mean(time) for _, time, _ in alg_data]
+        sus_cand = [candidates for _, _, candidates in alg_data]
+        
+        for alg_name, de, time, freq, cand in zip(
+            algo.keys(), avg_dist_err, avg_time, freq_hops, sus_cand
         ):
             df_dist_err[alg_name].append(de)
             df_time[alg_name].append(time)
             dict_freq[alg_name] = [freq[i] if i in freq else 0 for i in range(4)]
-
+            dict_cand[alg_name] = cand
+            
         df = pd.DataFrame(dict_freq, columns=algo.keys(), index=list(range(4)))
         err_freq.append(df)
-
+        
+        df = pd.DataFrame(dict_cand, columns=algo.keys())
+        df_candidates.append(df)
+        
+        
     df_de = pd.DataFrame(df_dist_err, columns=algo.keys(), index=dataset.keys())
     df_time = pd.DataFrame(df_time, columns=algo.keys(), index=dataset.keys())
-
-    return df_de, df_time, err_freq
     
-
+    return df_de, df_time, err_freq, df_candidates
+    
 
 # Datasets and algorithms
 comp_algo = {"GMLA": GMLA, "PTVA": PTVA_algo}
 par_algo = {"GFHF": TSSI_GFHF, "LGC": TSSI_LGC}
 
 dataset = {
-        # "Karate": nx.karate_club_graph(),
+        "Karate": nx.karate_club_graph(),
         "Football": G_football,
         # "Facebook": G_facebook,
-        # "Dolphin": G_dolphin,
-        # "albert barabasi": nx.barabasi_albert_graph(n=100, m=5),
-        # "erdos renyi": nx.erdos_renyi_graph(n=100, p=0.2),
-        # "Adjective Noun": adj_noun
+        "Dolphin": G_dolphin,
+        "albert barabasi": nx.barabasi_albert_graph(n=100, m=5),
+        "erdos renyi": nx.erdos_renyi_graph(n=100, p=0.2),
+        "Adjective Noun": adj_noun
 }
 
-de_comp, time_comp, freq_comp = gen_data_complete(comp_algo, dataset, 30)
+de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)
 de_par, time_par, err_freq_par = gen_data_partial(par_algo, dataset, 30)
 
 # Plotting
@@ -137,4 +144,17 @@ plt.show()
 freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
 for f, title in zip(freq, dataset.keys()):
     f.plot.bar(title=title, xlabel="Number of hops", ylabel="frequency")
-plt.show()
+    plt.show()
+
+# Frequeny vs Distance Error
+freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
+for f, title in zip(freq, dataset.keys()):
+    fig = sns.boxplot(data=f)
+    fig.set(title = title, xlabel = "Number of Hops", ylabel = 'Frequency')
+    plt.show()
+    
+# Whisker Plot for Number of candidate sources
+for name, c in zip(dataset.keys(), cand_comp):
+    fig = sns.boxplot(data=c)
+    fig.set(title = name, xlabel = 'Datasets', ylabel = 'No of candidate sources')
+    plt.show()

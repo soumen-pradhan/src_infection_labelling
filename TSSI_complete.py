@@ -152,7 +152,7 @@ def TSSI_GFHF(G, labelled, src):
     dist_err = nx_path(G, src, pred_src)
     print(f"TSSI_GFHF {pred_src} -> {len(list(G.neighbors(pred_src)))}")
 
-    return dist_err, partial_time + complete_time
+    return dist_err, partial_time + complete_time, len(list(G.neighbors(pred_src)))
 
 
 # TSSI-LGC 
@@ -195,5 +195,4 @@ def TSSI_LGC(G, labelled, src, alpha=0.5):
     dist_err = nx_path(G, src, pred_src)
     print(f"TSSI_LGC {pred_src} -> {len(list(G.neighbors(pred_src)))}")
 
-    return dist_err, partial_time + complete_time
-
+    return dist_err, partial_time + complete_time, len(list(G.neighbors(pred_src)))

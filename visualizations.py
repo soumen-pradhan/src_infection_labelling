@@ -30,49 +30,53 @@ from collections import Counter, defaultdict
 
 #For Algorithms using Partial Infection - GFHF, LGC
 def gen_data_partial(algo, dataset, n_snaps=10):
-
     df_dist_err = defaultdict(list)
     df_time = defaultdict(list)
     err_freq = []
-
+    df_candidates = []
+    
     for G_name, G in dataset.items():
         src = rand.choice(list(G.nodes()))
         N = G.number_of_nodes()
-
         known_dicts = simulatePartialInfection(
             G, src, threshold=0.3, sampling=0.2, n_snaps=n_snaps
         )
-
         score_time = [
             [alg(G, label, src) for label in known_dicts] for alg in algo.values()
         ]
-
         """
         alg_data = [alg1 [], alg2 [] ...]
-        alg1 [] -> [(dist_err), (snapshot_time)]
+        alg1 [] -> [(dist_err), (snapshot_time), (no_of_suspected_candidates)]
         snapshot_score_dict = {node: score}
         """
-
         alg_data = [list(zip(*res)) for res in score_time]
         
         dict_freq = defaultdict(list)
+        dict_cand = defaultdict(list)
         
-        freq_hops = [Counter(err) for err, _ in alg_data]
-        avg_dist_err = [stats.mean(err) for err, _ in alg_data]
-        avg_time = [stats.mean(time) for _, time in alg_data]
-
-        for alg_name, de, time, freq in zip(algo.keys(), avg_dist_err, avg_time, freq_hops):
+        freq_hops = [Counter(err) for err, _, _ in alg_data]
+        avg_dist_err = [stats.mean(err) for err, _, _ in alg_data]
+        avg_time = [stats.mean(time) for _, time, _ in alg_data]
+        sus_cand = [candidates for _, _, candidates in alg_data]
+        
+        for alg_name, de, time, freq, cand in zip(
+            algo.keys(), avg_dist_err, avg_time, freq_hops, sus_cand
+            ):
             df_dist_err[alg_name].append(de)
             df_time[alg_name].append(time)
             dict_freq[alg_name] = [freq[i] if i in freq else 0 for i in range(4)]
+            dict_cand[alg_name] = cand
         
         df = pd.DataFrame(dict_freq, columns=algo.keys(), index=list(range(4)))
         err_freq.append(df)
+        
+        df = pd.DataFrame(dict_cand, columns=algo.keys())
+        df_candidates.append(df)    
     
     df_de = pd.DataFrame(df_dist_err, columns=algo.keys(), index=dataset.keys())
     df_time = pd.DataFrame(df_time, columns=algo.keys(), index=dataset.keys())
                         
-    return df_de, df_time, err_freq
+    return df_de, df_time, err_freq, df_candidates
     
 
 # For Algorithms using Complete Observation - GMLA, PTVA
@@ -130,7 +134,7 @@ dataset = {
 }
 
 de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)
-de_par, time_par, err_freq_par = gen_data_partial(par_algo, dataset, 30)
+de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, 30)
 
 # Plotting
 de = pd.concat([de_par, de_comp], axis=1)
@@ -154,7 +158,8 @@ for f, title in zip(freq, dataset.keys()):
     plt.show()
     
 # Whisker Plot for Number of candidate sources
-for name, c in zip(dataset.keys(), cand_comp):
+cand = [pd.concat([p, c], axis=1) for p, c in zip(cand_par, cand_comp)]
+for name, c in zip(dataset.keys(), cand):
     fig = sns.boxplot(data=c)
     fig.set(title = name, xlabel = 'Datasets', ylabel = 'No of candidate sources')
     plt.show()

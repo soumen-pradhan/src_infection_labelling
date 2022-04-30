@@ -218,10 +218,13 @@ def PTVA_algo(G, filename, iterations):
         for i, dictionary in enumerate(infected_nodes_and_shortest_path):
             for node, distance in dictionary.items():
                 if scoreList[0] == node:
-                    result.append((distance, time_1, len(list(G.neighbors(scoreList[0])))))
+                    bfs = nx.bfs_tree(G, source=scoreList[0], depth_limit=distance)
+                    n_cand = len([n for n in bfs.nodes if bfs.out_degree(n) == 0 and bfs.in_degree(n) == 1])
+                    
+                    result.append((distance, time_1, n_cand))
                     error_distance.append(distance)
                     total_distance = total_distance + distance
         c = c+ 1
-        print(f'PTVA {scoreList[0]} -> {len(list(G.neighbors(scoreList[0])))}')
+        print(f'PTVA {scoreList[0]} -> {n_cand}')
         
     return result

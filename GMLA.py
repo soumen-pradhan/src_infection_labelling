@@ -266,13 +266,16 @@ def GMLA(G, filename, iterations):
         distance = infected_nodes_and_shortest_path.get(infected_node)
         # print("distance error\t", distance, "\n")
         error_distance.append(distance)
-        result.append((distance, curr_time, len(list(G.neighbors(infected_node)))))
+        
+        bfs = nx.bfs_tree(G, source=infected_node, depth_limit=distance)
+        n_cand = len([n for n in bfs.nodes if bfs.out_degree(n) == 0 and bfs.in_degree(n) == 1])
+        result.append((distance, curr_time, n_cand))
         total_distance = total_distance + distance
 
         repeat_list.append(rep)
         # print("avg error distance is: ", total_distance/len(repeat_list))
         # print("############################################## repeating ", rep, "time")
-        print(f'GMLA {O[0]} -> {len(list(G.neighbors(O[0])))}')
+        print(f'GMLA {O[0]} -> {n_cand}')
     return result
     # print("error_distance", error_distance)
     # print(repeat_list)

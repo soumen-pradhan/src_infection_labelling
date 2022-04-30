@@ -1,12 +1,14 @@
+from typing import NoReturn
 from urllib.request import urlopen
 from io import BytesIO
 from zipfile import ZipFile
 from matplotlib.pyplot import xlabel
 import networkx as nx
-from GMLA_2 import *
-from PTVA_algo_final2 import *
-from TSSI_complete import *
+from GMLA import *
+from PTVA import *
+from TSSI_GFHF_LGC import *
 import seaborn as sns
+from datetime import date, datetime
 
 G_football, _ = load("datasets/football")
 G_football.nodes()
@@ -140,26 +142,34 @@ de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset,
 ## Distance Error
 de = pd.concat([de_par, de_comp], axis=1)
 de.plot.bar(title="Distance Error", xlabel="Datasets", ylabel="distance error")
-plt.show()
+plt.savefig(fname=f"figures/distance_err_{datetime.today()}.png", format="png")
 
 ## Time of Execution
 time = pd.concat([time_par, time_comp], axis=1)
 time.plot.bar(title="Time of execution", xlabel="Datasets", ylabel="time (in ms)")
-plt.show()
+plt.savefig(fname=f"figures/execution_time_{datetime.today()}.png", format="png")
 
 ## Fequency of number of hops
+fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
+fig.suptitle('Number of Hops')
 freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
-for f, title in zip(freq, dataset.keys()):
-    f.plot.bar(title=title, xlabel="Number of hops", ylabel="frequency")
-    plt.show()
+for ax, f, title in zip(axes.flatten(), freq, dataset.keys()):
+    f.plot.bar(title=title, ax=ax, ylabel="frequency")
+plt.tight_layout()
+plt.savefig(fname=f"figures/number_of_hops_{datetime.today()}.png", format="png")
+
 
 
 ## Whisker Plot for Number of candidate sources
+fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
+fig.suptitle('Number of Candidate Sources')
 cand = [pd.concat([p, c], axis=1) for p, c in zip(cand_par, cand_comp)]
-for name, c in zip(dataset.keys(), cand):
-    fig = sns.boxplot(data=c)
-    fig.set(title = name, xlabel = 'Datasets', ylabel = 'No of candidate sources')
-    plt.show()
+for ax, name, c in zip(axes.flatten(), dataset.keys(), cand):
+    box_axes = sns.boxplot(data=c, ax=ax)
+    box_axes.set(title = name, ylabel = 'No of candidate sources')
+plt.tight_layout()
+plt.savefig(fname=f"figures/number_of_candidate_src_{datetime.today()}.png", format="png")
+
     
 # Save - de, time, freq, cand
 cand_df = []

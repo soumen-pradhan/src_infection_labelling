@@ -8,7 +8,7 @@ from PTVA_algo_final2 import *
 from TSSI_complete import *
 import seaborn as sns
 
-G_football, _ = load("football")
+G_football, _ = load("datasets/football")
 G_football.nodes()
 
 # with open("facebook.csv", "r") as data:
@@ -22,7 +22,7 @@ with urlopen(d_url) as sock, ZipFile(BytesIO(sock.read())) as zf:
     gml = zf.read("dolphins.gml").decode().split("\n")[1:]
     G_dolphin = nx.parse_gml(gml)
 
-adj_noun = nx.read_gml("adjnoun.gml")
+adj_noun = nx.read_gml("datasets/adjnoun.gml")
 
  # Counter -> dict {item: freq}
 from collections import Counter, defaultdict
@@ -133,33 +133,41 @@ dataset = {
         "Adjective Noun": adj_noun
 }
 
-de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)
 de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, 30)
+de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)
 
 # Plotting
+## Distance Error
 de = pd.concat([de_par, de_comp], axis=1)
 de.plot.bar(title="Distance Error", xlabel="Datasets", ylabel="distance error")
 plt.show()
 
+## Time of Execution
 time = pd.concat([time_par, time_comp], axis=1)
 time.plot.bar(title="Time of execution", xlabel="Datasets", ylabel="time (in ms)")
 plt.show()
 
+## Fequency of number of hops
 freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
 for f, title in zip(freq, dataset.keys()):
     f.plot.bar(title=title, xlabel="Number of hops", ylabel="frequency")
     plt.show()
 
-# Frequeny vs Distance Error
-freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
-for f, title in zip(freq, dataset.keys()):
-    fig = sns.boxplot(data=f)
-    fig.set(title = title, xlabel = "Number of Hops", ylabel = 'Frequency')
-    plt.show()
-    
-# Whisker Plot for Number of candidate sources
+
+## Whisker Plot for Number of candidate sources
 cand = [pd.concat([p, c], axis=1) for p, c in zip(cand_par, cand_comp)]
 for name, c in zip(dataset.keys(), cand):
     fig = sns.boxplot(data=c)
     fig.set(title = name, xlabel = 'Datasets', ylabel = 'No of candidate sources')
     plt.show()
+    
+# Save - de, time, freq, cand
+cand_df = []
+for name, c in zip(dataset.keys(), cand):
+    cand_df.append(pd.DataFrame(c, columns=["GFHF", "LGC", "GMLA", "PTVA"]))
+    
+with pd.ExcelWriter('output/output.xlsx', engine='xlsxwriter') as writer:  
+    de.to_excel(writer, sheet_name='distance_error')
+    time.to_excel(writer, sheet_name="execution_time")
+    for name, c in zip(dataset.keys(), cand_df):
+        c.to_excel(writer, sheet_name=f"{name}-candidates_src")

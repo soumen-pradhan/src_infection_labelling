@@ -150,9 +150,12 @@ def TSSI_GFHF(G, labelled, src):
 
     pred_src = max(dict_scores, key=dict_scores.get)
     dist_err = nx_path(G, src, pred_src)
-    print(f"TSSI_GFHF {pred_src} -> {len(list(G.neighbors(pred_src)))}")
+    
+    bfs = nx.bfs_tree(G, source=pred_src, depth_limit=dist_err)
+    n_cand = len([n for n in bfs.nodes if bfs.out_degree(n) == 0 and bfs.in_degree(n) == 1])
+    print(f"TSSI_GFHF {pred_src} -> {n_cand}")
+    return dist_err, partial_time + complete_time, n_cand
 
-    return dist_err, partial_time + complete_time, len(list(G.neighbors(pred_src)))
 
 
 # TSSI-LGC 
@@ -193,6 +196,8 @@ def TSSI_LGC(G, labelled, src, alpha=0.5):
 
     pred_src = max(dict_scores, key=dict_scores.get)
     dist_err = nx_path(G, src, pred_src)
-    print(f"TSSI_LGC {pred_src} -> {len(list(G.neighbors(pred_src)))}")
-
-    return dist_err, partial_time + complete_time, len(list(G.neighbors(pred_src)))
+    
+    bfs = nx.bfs_tree(G, source=pred_src, depth_limit=dist_err)
+    n_cand = len([n for n in bfs.nodes if bfs.out_degree(n) == 0 and bfs.in_degree(n) == 1])
+    print(f"TSSI_LGC {pred_src} -> {n_cand}")
+    return dist_err, partial_time + complete_time, n_cand

@@ -1,3 +1,4 @@
+from matplotlib.pyplot import plot
 from visualizations import *
 
 
@@ -6,7 +7,7 @@ comp_algo = {"GMLA": GMLA, "PTVA": PTVA_algo}
 par_algo = {"GFHF": TSSI_GFHF, "LGC": TSSI_LGC}
 
 ## Datasets - BA - ER 
-BA_EA_edge_connectivity = list(np.arange(1, 6));
+BA_EA_edge_connectivity = list(np.arange(2, 6));
 
 erdos_renyi_500 = defaultdict();
 albert_barabasi_500 = defaultdict();
@@ -42,5 +43,10 @@ for i in erdos_renyi_density:
 facebook, _ = load("datasets/random/facebook_150_giant_edge_list")
 fb_dataset = {"facebook_150" : facebook}
 
-datasets = [E]
-plot_graph(ER_dense, 30, "ER (100)")
+# datasets = [erdos_renyi_500, erdos_renyi_1000, albert_barabasi_500, albert_barabasi_1000, ER_dense, barabasi2, facebook]
+# label = ["ER (500)", "ER (1000)", "BA (500)", "BA (1000)", "ER (100)", "BA (100)", "facebook (150)"]
+
+# for l, d in zip(label, datasets):
+#     plot_graph(d, 30, l)
+    
+plot_graph(barabasi2, 10, "BA (100)")

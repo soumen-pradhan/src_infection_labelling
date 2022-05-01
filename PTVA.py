@@ -13,7 +13,7 @@ def inv(m):
     if a != b:
         raise ValueError("Only square matrices are invertible.")
     i = np.eye(a, a)
-    return np.linalg.lstsq(m, i)[0]
+    return np.linalg.lstsq(m, i, rcond=None)[0]
 
 def load(filename):
     df = pd.read_csv(filename + '.csv')
@@ -182,13 +182,17 @@ def PTVA_algo(G, filename, iterations):
         start = time.time()
         # k0 = int(np.ceil(np.sqrt(len(G))))
         k0 = max(5, int(len(G.nodes)/20))
+        
+        infected = [n for n in G.nodes if n in arrivalTime and arrivalTime[n] != -1]
+        observers = np.random.choice(infected, k0, replace=False).tolist()
+        
         # k0 = 8
         # np.random.seed(k0)
-        all_observers = np.random.choice(G.nodes, k0, replace=False).tolist()
-        observers = []
-        for i in all_observers:
-            if i in arrivalTime and arrivalTime[i] != -1:
-                observers.append(i)
+        # all_observers = np.random.choice(G.nodes, k0, replace=False).tolist()
+        # observers = []
+        # for i in all_observers:
+        #     if i in arrivalTime and arrivalTime[i] != -1:
+        #         observers.append(i)
         
         # observers = sensor_node_selection(G)
         O_length = len(observers)

@@ -10,6 +10,9 @@ from TSSI_GFHF_LGC import *
 import seaborn as sns
 from datetime import date, datetime
 
+ # Counter -> dict {item: freq}
+from collections import Counter, defaultdict
+
 G_football, _ = load("datasets/football")
 G_football.nodes()
 
@@ -25,9 +28,6 @@ with urlopen(d_url) as sock, ZipFile(BytesIO(sock.read())) as zf:
     G_dolphin = nx.parse_gml(gml)
 
 adj_noun = nx.read_gml("datasets/adjnoun.gml")
-
- # Counter -> dict {item: freq}
-from collections import Counter, defaultdict
 
 
 #For Algorithms using Partial Infection - GFHF, LGC
@@ -122,8 +122,14 @@ def gen_data_complete(algo, dataset, iterations):
     
 
 # Datasets and algorithms
-comp_algo = {"GMLA": GMLA, "PTVA": PTVA_algo}
-par_algo = {"GFHF": TSSI_GFHF, "LGC": TSSI_LGC}
+comp_algo = {
+    "GMLA": GMLA, 
+    "PTVA": PTVA_algo
+    }
+par_algo = {
+    "GFHF": TSSI_GFHF, 
+    "LGC": TSSI_LGC
+    }
 
 dataset = {
         "Karate": nx.karate_club_graph(),
@@ -135,49 +141,98 @@ dataset = {
         "Adjective Noun": adj_noun
 }
 
-de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, 30)
-de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)
+# de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, 30)
+# de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)
 
-# Plotting
-## Distance Error
-de = pd.concat([de_par, de_comp], axis=1)
-de.plot.bar(title="Distance Error", xlabel="Datasets", ylabel="distance error")
-plt.savefig(fname=f"figures/distance_err_{datetime.today()}.png", format="png")
+# # Plotting
+# ## Distance Error
+# de = pd.concat([de_par, de_comp], axis=1)
+# de.plot.bar(title="Distance Error", xlabel="Datasets", ylabel="distance error")
+# plt.xlabel("Datasets", rotation=0)
+# plt.savefig(fname=f"figures/distance_err_{datetime.today()}.png", format="png")
 
-## Time of Execution
-time = pd.concat([time_par, time_comp], axis=1)
-time.plot.bar(title="Time of execution", xlabel="Datasets", ylabel="time (in ms)")
-plt.savefig(fname=f"figures/execution_time_{datetime.today()}.png", format="png")
+# ## Time of Execution
+# time = pd.concat([time_par, time_comp], axis=1)
+# time.plot.bar(title="Time of execution", xlabel="Datasets", ylabel="time (in s)")
+# plt.xlabel("Datasets", rotation=0)
+# plt.savefig(fname=f"figures/execution_time_{datetime.today()}.png", format="png")
 
-## Fequency of number of hops
-fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
-fig.suptitle('Number of Hops')
-freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
-for ax, f, title in zip(axes.flatten(), freq, dataset.keys()):
-    f.plot.bar(title=title, ax=ax, ylabel="frequency")
-plt.tight_layout()
-plt.savefig(fname=f"figures/number_of_hops_{datetime.today()}.png", format="png")
+# ## Fequency of number of hops
+# fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
+# fig.suptitle('Number of Hops')
+# freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
+# for ax, f, title in zip(axes.flatten(), freq, dataset.keys()):
+#     f.plot.bar(title=title, ax=ax, ylabel="frequency")
+# plt.tight_layout()
+# plt.savefig(fname=f"figures/number_of_hops_{datetime.today()}.png", format="png")
 
 
-
-## Whisker Plot for Number of candidate sources
-fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
-fig.suptitle('Number of Candidate Sources')
-cand = [pd.concat([p, c], axis=1) for p, c in zip(cand_par, cand_comp)]
-for ax, name, c in zip(axes.flatten(), dataset.keys(), cand):
-    box_axes = sns.boxplot(data=c, ax=ax)
-    box_axes.set(title = name, ylabel = 'No of candidate sources')
-plt.tight_layout()
-plt.savefig(fname=f"figures/number_of_candidate_src_{datetime.today()}.png", format="png")
+# ## Whisker Plot for Number of candidate sources
+# fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
+# fig.suptitle('Number of Candidate Sources')
+# cand = [pd.concat([p, c], axis=1) for p, c in zip(cand_par, cand_comp)]
+# for ax, name, c in zip(axes.flatten(), dataset.keys(), cand):
+#     box_axes = sns.boxplot(data=c, ax=ax)
+#     box_axes.set(title = name, ylabel = 'No of candidate sources')
+# plt.tight_layout()
+# plt.savefig(fname=f"figures/number_of_candidate_src_{datetime.today()}.png", format="png")
 
     
-# Save - de, time, freq, cand
-cand_df = []
-for name, c in zip(dataset.keys(), cand):
-    cand_df.append(pd.DataFrame(c, columns=["GFHF", "LGC", "GMLA", "PTVA"]))
+# # Save - de, time, freq, cand
+# cand_df = []
+# for name, c in zip(dataset.keys(), cand):
+#     cand_df.append(pd.DataFrame(c, columns=["GFHF", "LGC", "GMLA", "PTVA"]))
     
-with pd.ExcelWriter('output/output.xlsx', engine='xlsxwriter') as writer:  
-    de.to_excel(writer, sheet_name='distance_error')
-    time.to_excel(writer, sheet_name="execution_time")
-    for name, c in zip(dataset.keys(), cand_df):
-        c.to_excel(writer, sheet_name=f"{name}-candidates_src")
+# with pd.ExcelWriter('output/output.xlsx', engine='xlsxwriter') as writer:  
+#     de.to_excel(writer, sheet_name='distance_error')
+#     time.to_excel(writer, sheet_name="execution_time")
+#     for name, c in zip(dataset.keys(), cand_df):
+#         c.to_excel(writer, sheet_name=f"{name}-candidates_src")
+
+def plot_graph(dataset, iterations, graph_label, par_algo = par_algo, comp_algo = comp_algo):
+    de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, iterations)
+    de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, iterations)
+
+    # Plotting
+    ## Distance Error
+    de = pd.concat([de_par, de_comp], axis=1)
+    de.plot.bar(title="Distance Error", xlabel="Datasets", ylabel="distance error")
+    plt.savefig(fname=f"figures/distance_err_{datetime.today()}.png", format="png")
+    de.plot.line(title="Distance Error", xlabel="Density", ylabel="distance error")
+    plt.savefig(fname=f"figures/line_plot_distance_err{datetime.today()}.png", format="png")
+
+    ## Time of Execution
+    time = pd.concat([time_par, time_comp], axis=1)
+    time.plot.bar(title="Time of execution", xlabel="Datasets", ylabel="time (in s)")
+    plt.savefig(fname=f"figures/execution_time_{datetime.today()}.png", format="png")
+
+    ## Fequency of number of hops
+    fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
+    fig.suptitle('Number of Hops')
+    freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
+    for ax, f, title in zip(axes.flatten(), freq, dataset.keys()):
+        f.plot.bar(title=title, ax=ax, ylabel="frequency")
+    plt.tight_layout()
+    plt.savefig(fname=f"figures/number_of_hops_{datetime.today()}.png", format="png")
+
+    ## Whisker Plot for Number of candidate sources
+    fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
+    fig.suptitle('Number of Candidate Sources')
+    cand = [pd.concat([p, c], axis=1) for p, c in zip(cand_par, cand_comp)]
+    for ax, name, c in zip(axes.flatten(), dataset.keys(), cand):
+        box_axes = sns.boxplot(data=c, ax=ax)
+        box_axes.set(title = name, ylabel = 'No of candidate sources')
+    plt.tight_layout()
+    plt.savefig(fname=f"figures/number_of_candidate_src_{datetime.today()}.png", format="png")
+    
+    # Save - de, time, freq, cand
+    cand_df = []
+    for name, c in zip(dataset.keys(), cand):
+        cand_df.append(pd.DataFrame(c, columns=["GFHF", "LGC", "GMLA", "PTVA"]))
+
+    with pd.ExcelWriter(f'output/{graph_label}_output.xlsx', engine='xlsxwriter') as writer:  
+        de.to_excel(writer, sheet_name='distance_error')
+        time.to_excel(writer, sheet_name="execution_time")
+        for name, c in zip(dataset.keys(), cand_df):
+            c.to_excel(writer, sheet_name=f"{name}-candidates_src")
+    

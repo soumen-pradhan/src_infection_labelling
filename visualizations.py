@@ -196,14 +196,14 @@ def plot_graph(dataset, iterations, graph_label, par_algo = par_algo, comp_algo 
     # Plotting
     ## Distance Error
     de = pd.concat([de_par, de_comp], axis=1)
-    de.plot.bar(title="Distance Error", xlabel="Datasets", ylabel="distance error")
+    de.plot.bar(title=graph_label, xlabel="Datasets", ylabel="distance error")
     plt.savefig(fname=f"figures/distance_err_{datetime.today()}.png", format="png")
     de.plot.line(title="Distance Error", xlabel="Density", ylabel="distance error")
     plt.savefig(fname=f"figures/line_plot_distance_err{datetime.today()}.png", format="png")
 
     ## Time of Execution
     time = pd.concat([time_par, time_comp], axis=1)
-    time.plot.bar(title="Time of execution", xlabel="Datasets", ylabel="time (in s)")
+    time.plot.bar(title=graph_label, xlabel="Datasets", ylabel="time (in s)")
     plt.savefig(fname=f"figures/execution_time_{datetime.today()}.png", format="png")
 
     ## Fequency of number of hops

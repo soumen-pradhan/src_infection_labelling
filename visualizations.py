@@ -22,12 +22,12 @@ G_football.nodes()
 #         data, delimiter=",", create_using=nx.Graph, nodetype=int
 #     )
 
-d_url = "http://www-personal.umich.edu/~mejn/netdata/dolphins.zip"
-with urlopen(d_url) as sock, ZipFile(BytesIO(sock.read())) as zf:
-    gml = zf.read("dolphins.gml").decode().split("\n")[1:]
-    G_dolphin = nx.parse_gml(gml)
+# d_url = "http://www-personal.umich.edu/~mejn/netdata/dolphins.zip"
+# with urlopen(d_url) as sock, ZipFile(BytesIO(sock.read())) as zf:
+#     gml = zf.read("dolphins.gml").decode().split("\n")[1:]
+#     G_dolphin = nx.parse_gml(gml)
 
-adj_noun = nx.read_gml("datasets/adjnoun.gml")
+# adj_noun = nx.read_gml("datasets/adjnoun.gml")
 
 
 #For Algorithms using Partial Infection - GFHF, LGC
@@ -131,15 +131,15 @@ par_algo = {
     "LGC": TSSI_LGC
     }
 
-dataset = {
-        "Karate": nx.karate_club_graph(),
-        "Football": G_football,
-        # "Facebook": G_facebook,
-        "Dolphin": G_dolphin,
-        "albert barabasi": nx.barabasi_albert_graph(n=100, m=5),
-        "erdos renyi": nx.erdos_renyi_graph(n=100, p=0.2),
-        "Adjective Noun": adj_noun
-}
+# dataset = {
+#         "Karate": nx.karate_club_graph(),
+#         "Football": G_football,
+#         # "Facebook": G_facebook,
+#         "Dolphin": G_dolphin,
+#         "albert barabasi": nx.barabasi_albert_graph(n=100, m=5),
+#         "erdos renyi": nx.erdos_renyi_graph(n=100, p=0.2),
+#         "Adjective Noun": adj_noun
+# }
 
 # de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, 30)
 # de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)

@@ -3,7 +3,10 @@ from visualizations import *
 
 
 # Datasets and algorithms
-comp_algo = {"GMLA": GMLA, "PTVA": PTVA_algo}
+comp_algo = {
+    # "GMLA": GMLA, 
+    # "PTVA": PTVA_algo
+    }
 par_algo = {"GFHF": TSSI_GFHF, "LGC": TSSI_LGC}
 
 ## Datasets - BA - ER 
@@ -49,4 +52,5 @@ fb_dataset = {"facebook_150" : facebook}
 # for l, d in zip(label, datasets):
 #     plot_graph(d, 30, l)
     
-plot_graph(barabasi2, 10, "BA (100)")
+plot_graph(ER_dense, 10, "ER (100)")
+plot_graph(barabasi2, 10, "BR (100)")

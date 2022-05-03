@@ -1,8 +1,16 @@
 from TSSI_GFHF_LGC import *
 
+def load(filename):
+    df = pd.read_csv(filename + '.csv')
+    Graphtype = nx.Graph()
+    G = nx.from_pandas_edgelist(df, source='Source', target='Target', create_using=Graphtype)
+    return G, len(G)
+
 #Complete Observation
-G = nx.karate_club_graph()
+# G, _ = load("datasets/football")
+G  = nx.karate_club_graph()
 src = np.random.choice(list(G.nodes()))
+dataset_name = "Karate"
 
 y = simulateInfection(G, src)
 f, _= labelRankingScore(G, y)
@@ -26,15 +34,13 @@ nx.draw_networkx(
         alpha=0.4,
         font_weight='bold')
 
-plt.show()
-
+plt.savefig(fname =f"Graphs/{dataset_name}-complete_onservation.png", format = "png")
 
 print(f'Actual Source: {src}\n'
       f'Predicted Source: {detected_src}')
 
 
 #Partial Observation
-G = nx.karate_club_graph()
 src = np.random.choice(list(G.nodes()))
 N = G.number_of_nodes()
 
@@ -50,7 +56,7 @@ fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 20))
 fig.tight_layout()
 
 pos = nx.spring_layout(G, k=0.2, seed=42)
-size = [v * 5000 if v > 0 else 500 for v in f.values()]
+size = [v * 5000 if v > 0 else 800 for v in f.values()]
 
 color1 = ['green' if n in known_dict['safe'] else
           'red' if n in known_dict['infected'] else
@@ -79,8 +85,7 @@ nx.draw_networkx( # Predicted Graph
         edge_color="#adadad",
         alpha=0.4,
         font_weight='bold')
-
-plt.show()
+plt.savefig(fname =f"Graphs/{dataset_name}-snapshot_observation.png", format = "png")
 
 
 print(f'Actual Source: {src}\n'

@@ -141,8 +141,8 @@ par_algo = {
 #         "Adjective Noun": adj_noun
 # }
 
-# de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, 30)
-# de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 30)
+# de_par, time_par, err_freq_par, cand_par = gen_data_partial(par_algo, dataset, 100)
+# de_comp, time_comp, freq_comp, cand_comp = gen_data_complete(comp_algo, dataset, 100)
 
 # # Plotting
 # ## Distance Error

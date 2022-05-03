@@ -208,7 +208,7 @@ def plot_graph(dataset, iterations, graph_label, par_algo = par_algo, comp_algo 
 
     ## Fequency of number of hops
     fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
-    fig.suptitle('Number of Hops')
+    fig.suptitle('Number of Hops - {graph_label}')
     freq = [pd.concat([p, c], axis=1) for p, c in zip(err_freq_par, freq_comp)]
     for ax, f, title in zip(axes.flatten(), freq, dataset.keys()):
         f.plot.bar(title=title, ax=ax, ylabel="frequency")
@@ -217,7 +217,7 @@ def plot_graph(dataset, iterations, graph_label, par_algo = par_algo, comp_algo 
 
     ## Whisker Plot for Number of candidate sources
     fig, axes = plt.subplots(nrows=math.ceil(len(dataset) / 2), ncols=2, figsize=(15, 15))
-    fig.suptitle('Number of Candidate Sources')
+    fig.suptitle(f'Number of Candidate Sources - {graph_label}')
     cand = [pd.concat([p, c], axis=1) for p, c in zip(cand_par, cand_comp)]
     for ax, name, c in zip(axes.flatten(), dataset.keys(), cand):
         box_axes = sns.boxplot(data=c, ax=ax)
